@@ -63,9 +63,9 @@ impl Parser {
             let stmt = self.statement()?;
             statements.push(stmt);
 
-            // Here, simply consume the EOL token and move to the next statement
-            if let Some(Token::EOL) = self.peek_next_token() {
-                self.position += 1; // Consume EOL
+            // Here, simply consume the EoL token and move to the next statement
+            if let Some(Token::EoL) = self.peek_next_token() {
+                self.position += 1; // Consume EoL
             } else {
                 return Err("Expected end of line".to_string());
             }

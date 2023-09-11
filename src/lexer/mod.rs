@@ -10,7 +10,7 @@ pub enum Token {
     OpenParen,
     CloseParen,
     Assign,
-    EOL,
+    EoL,
 }
 
 #[derive(PartialEq, Debug, Clone)]
@@ -94,7 +94,7 @@ impl Lexer {
                 ('=', Some(Token::Assign)),
                 ('(', Some(Token::OpenParen)),
                 (')', Some(Token::CloseParen)),
-                (';', Some(Token::EOL)),
+                (';', Some(Token::EoL)),
                 numbers,
                 identifiers
             ) {
@@ -134,7 +134,7 @@ mod tests {
 
     test_lexer!(assign, "=", vec![Token::Assign]);
 
-    test_lexer!(eol, ";", vec![Token::EOL]);
+    test_lexer!(eol, ";", vec![Token::EoL]);
 
     test_lexer!(number, "123", vec![Token::Number(123)]);
 

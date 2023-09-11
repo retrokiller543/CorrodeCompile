@@ -1,3 +1,5 @@
+#[cfg(test)]
+
 macro_rules! get_parser {
     ($input:expr) => {{
         let lexer = Lexer::new($input);
@@ -59,97 +61,94 @@ macro_rules! ast_test {
     };
 }
 
-#[cfg(test)]
-mod tests {
-    use crate::lexer::Lexer;
-    use crate::parser::*;
+use crate::lexer::Lexer;
+use crate::parser::*;
 
-    fn extract_number(ast: &ASTNode) -> Option<i32> {
-        if let ASTNode::Number(val) = ast {
-            return Some(*val);
-        } else if let ASTNode::Program(stmts) = ast {
-            if let ASTNode::Statement(ref inner) = &stmts[0] {
-                if let ASTNode::Number(val) = **inner {
-                    return Some(val);
-                }
+fn extract_number(ast: &ASTNode) -> Option<i32> {
+    if let ASTNode::Number(val) = ast {
+        return Some(*val);
+    } else if let ASTNode::Program(stmts) = ast {
+        if let ASTNode::Statement(ref inner) = &stmts[0] {
+            if let ASTNode::Number(val) = **inner {
+                return Some(val);
             }
         }
-        None
     }
-
-    fn extract_binary_op(ast: &ASTNode) -> Option<(&Operator, &Box<ASTNode>, &Box<ASTNode>)> {
-        match ast {
-            ASTNode::BinaryOp {
-                ref op,
-                ref left,
-                ref right,
-            } => Some((op, left, right)),
-            ASTNode::Program(stmts) => {
-                if let ASTNode::Statement(ref inner) = &stmts[0] {
-                    if let ASTNode::BinaryOp {
-                        ref op,
-                        ref left,
-                        ref right,
-                    } = **inner
-                    {
-                        return Some((op, left, right));
-                    }
-                }
-                None
-            }
-            _ => None,
-        }
-    }
-
-    ast_test!(test_single_number, "5;", |ast| {
-        let num = extract_number(ast).expect("Expected a number");
-        assert_eq!(num, 5);
-    });
-
-    ast_test!(test_binary_op, "5 + 3;", |ast| {
-        let (op, left, right) = extract_binary_op(ast).expect("Expected a binary operation");
-        assert_eq!(op, &Operator::Plus);
-        assert_eq!(extract_number(left.as_ref()), Some(5));
-        assert_eq!(extract_number(right.as_ref()), Some(3));
-    });
-
-    ast_test!(test_binary_op_precedence, "5 + 3 * 2;", |ast| {
-        let (top_op, top_left, top_right) =
-            extract_binary_op(ast).expect("Expected a top-level binary operation");
-        assert_eq!(top_op, &Operator::Plus);
-        assert_eq!(extract_number(top_left.as_ref()), Some(5));
-
-        // Extract nested binary op from the right side of the top-level operation
-        let (nested_op, nested_left, nested_right) =
-            extract_binary_op(top_right.as_ref()).expect("Expected a nested binary operation");
-        assert_eq!(nested_op, &Operator::Multiply);
-        assert_eq!(extract_number(nested_left.as_ref()), Some(3));
-        assert_eq!(extract_number(nested_right.as_ref()), Some(2));
-    });
-
-    ast_test!(test_large_expression, "5 + 3 * 2 - 1 / 4;", |ast| {
-        let (top_op, top_left, top_right) =
-            extract_binary_op(ast).expect("Expected a top-level binary operation");
-        assert_eq!(top_op, &Operator::Minus);
-
-        // Extract the Plus operation from the left side of the Minus operation
-        let (plus_op, plus_left, plus_right) =
-            extract_binary_op(top_left.as_ref()).expect("Expected a Plus binary operation");
-        assert_eq!(plus_op, &Operator::Plus);
-        assert_eq!(extract_number(plus_left.as_ref()), Some(5));
-
-        // Extract the Multiply operation from the right side of the Plus operation
-        let (multiply_op, multiply_left, multiply_right) =
-            extract_binary_op(plus_right.as_ref()).expect("Expected a Multiply binary operation");
-        assert_eq!(multiply_op, &Operator::Multiply);
-        assert_eq!(extract_number(multiply_left.as_ref()), Some(3));
-        assert_eq!(extract_number(multiply_right.as_ref()), Some(2));
-
-        // Extract the Divide operation from the right side of the Minus operation
-        let (divide_op, divide_left, divide_right) =
-            extract_binary_op(top_right.as_ref()).expect("Expected a Divide binary operation");
-        assert_eq!(divide_op, &Operator::Divide);
-        assert_eq!(extract_number(divide_left.as_ref()), Some(1));
-        assert_eq!(extract_number(divide_right.as_ref()), Some(4));
-    });
+    None
 }
+
+fn extract_binary_op(ast: &ASTNode) -> Option<(&Operator, &ASTNode, &ASTNode)> {
+    match ast {
+        ASTNode::BinaryOp {
+            ref op,
+            ref left,
+            ref right,
+        } => Some((op, left, right)),
+        ASTNode::Program(stmts) => {
+            if let ASTNode::Statement(ref inner) = &stmts[0] {
+                if let ASTNode::BinaryOp {
+                    ref op,
+                    ref left,
+                    ref right,
+                } = **inner
+                {
+                    return Some((op, left, right));
+                }
+            }
+            None
+        }
+        _ => None,
+    }
+}
+
+ast_test!(test_single_number, "5;", |ast| {
+    let num = extract_number(ast).expect("Expected a number");
+    assert_eq!(num, 5);
+});
+
+ast_test!(test_binary_op, "5 + 3;", |ast| {
+    let (op, left, right) = extract_binary_op(ast).expect("Expected a binary operation");
+    assert_eq!(op, &Operator::Plus);
+    assert_eq!(extract_number(left), Some(5));
+    assert_eq!(extract_number(right), Some(3));
+});
+
+ast_test!(test_binary_op_precedence, "5 + 3 * 2;", |ast| {
+    let (top_op, top_left, top_right) =
+        extract_binary_op(ast).expect("Expected a top-level binary operation");
+    assert_eq!(top_op, &Operator::Plus);
+    assert_eq!(extract_number(top_left), Some(5));
+
+    // Extract nested binary op from the right side of the top-level operation
+    let (nested_op, nested_left, nested_right) =
+        extract_binary_op(top_right).expect("Expected a nested binary operation");
+    assert_eq!(nested_op, &Operator::Multiply);
+    assert_eq!(extract_number(nested_left), Some(3));
+    assert_eq!(extract_number(nested_right), Some(2));
+});
+
+ast_test!(test_large_expression, "5 + 3 * 2 - 1 / 4;", |ast| {
+    let (top_op, top_left, top_right) =
+        extract_binary_op(ast).expect("Expected a top-level binary operation");
+    assert_eq!(top_op, &Operator::Minus);
+
+    // Extract the Plus operation from the left side of the Minus operation
+    let (plus_op, plus_left, plus_right) =
+        extract_binary_op(top_left).expect("Expected a Plus binary operation");
+    assert_eq!(plus_op, &Operator::Plus);
+    assert_eq!(extract_number(plus_left), Some(5));
+
+    // Extract the Multiply operation from the right side of the Plus operation
+    let (multiply_op, multiply_left, multiply_right) =
+        extract_binary_op(plus_right).expect("Expected a Multiply binary operation");
+    assert_eq!(multiply_op, &Operator::Multiply);
+    assert_eq!(extract_number(multiply_left), Some(3));
+    assert_eq!(extract_number(multiply_right), Some(2));
+
+    // Extract the Divide operation from the right side of the Minus operation
+    let (divide_op, divide_left, divide_right) =
+        extract_binary_op(top_right).expect("Expected a Divide binary operation");
+    assert_eq!(divide_op, &Operator::Divide);
+    assert_eq!(extract_number(divide_left), Some(1));
+    assert_eq!(extract_number(divide_right), Some(4));
+});

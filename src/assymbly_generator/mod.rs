@@ -85,15 +85,12 @@ fn generate_assembly(ast: &ASTNode, sym_table: &mut SymbolTable) -> String {
                 Operator::Plus => asm_binary_op!(add),
                 Operator::Minus => asm_binary_op!(sub),
                 Operator::Multiply => asm_binary_op!(imul),
-                Operator::Divide => {
-                    format!(
-                        "pop rdi\n\
+                Operator::Divide => "pop rdi\n\
                              pop rax\n\
                              cqo\n\
                              idiv rdi\n\
                              push rax\n"
-                    )
-                }
+                    .to_string(),
             };
             format!("{}{}{}", left_asm, right_asm, op_asm)
         }
@@ -117,7 +114,7 @@ fn generate_assembly(ast: &ASTNode, sym_table: &mut SymbolTable) -> String {
     }
 }
 
-fn wrap_as_program(assembly: &str, sym_table: &mut SymbolTable) -> String {
+fn wrap_as_program(assembly: &str, sym_table: &SymbolTable) -> String {
     let mut program = String::new();
     program += "section .text\n";
     program += "\tglobal _start\n\n";
@@ -153,5 +150,5 @@ pub fn compile_to_assembly(input: &str) -> String {
 
     assembly += &generate_assembly(&ast_nodes, &mut sym_table);
 
-    wrap_as_program(&assembly, &mut sym_table)
+    wrap_as_program(&assembly, &sym_table)
 }
