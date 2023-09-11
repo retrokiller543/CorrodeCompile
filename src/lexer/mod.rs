@@ -85,7 +85,8 @@ impl Lexer {
         let mut chars = self.input.chars().peekable();
 
         while chars.peek().is_some() {
-            if let Some(token) = match_token!(chars,
+            if let Some(token) = match_token!(
+                chars,
                 ('+', Some(Token::Operator(Operator::Plus))),
                 ('-', Some(Token::Operator(Operator::Minus))),
                 ('*', Some(Token::Operator(Operator::Multiply))),
@@ -137,11 +138,31 @@ mod tests {
 
     test_lexer!(number, "123", vec![Token::Number(123)]);
 
-    test_lexer!(identifier, "abc", vec![Token::Identifier("abc".to_string())]);
+    test_lexer!(
+        identifier,
+        "abc",
+        vec![Token::Identifier("abc".to_string())]
+    );
 
-    test_lexer!(identifier_with_number, "abc123", vec![Token::Identifier("abc123".to_string())]);
+    test_lexer!(
+        identifier_with_number,
+        "abc123",
+        vec![Token::Identifier("abc123".to_string())]
+    );
 
-    test_lexer!(identifier_with_underscore, "abc_123", vec![Token::Identifier("abc_123".to_string())]);
+    test_lexer!(
+        identifier_with_underscore,
+        "abc_123",
+        vec![Token::Identifier("abc_123".to_string())]
+    );
 
-    test_lexer!(complex_expr, "variable_name = 123", vec![Token::Identifier("variable_name".to_string()), Token::Assign, Token::Number(123)]);
+    test_lexer!(
+        complex_expr,
+        "variable_name = 123",
+        vec![
+            Token::Identifier("variable_name".to_string()),
+            Token::Assign,
+            Token::Number(123)
+        ]
+    );
 }

@@ -1,9 +1,9 @@
 // Purpose: main file for the compiler
 // Path: src/main.rs
 
+mod assymbly_generator;
 mod lexer;
 mod parser;
-mod assymbly_generator;
 
 use assymbly_generator::compile_to_assembly;
 
@@ -17,8 +17,10 @@ fn main() {
 
     let mut expr = String::new();
     // read file content into string expr
-    std::io::BufReader::new(file).read_to_string(&mut expr).unwrap();
-    
+    std::io::BufReader::new(file)
+        .read_to_string(&mut expr)
+        .unwrap();
+
     // compile expr to assembly
     let result = compile_to_assembly(&expr);
 

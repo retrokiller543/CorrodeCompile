@@ -2,9 +2,9 @@
 // Purpose: generate assembly from AST
 // Path: src/assembly_generator/mod.rs
 
-use std::collections::HashMap;
-use crate::lexer::{Operator, Lexer};
+use crate::lexer::{Lexer, Operator};
 use crate::parser::{ASTNode, Parser};
+use std::collections::HashMap;
 
 macro_rules! asm_push {
     ($value:expr) => {
@@ -26,10 +26,13 @@ macro_rules! asm_mov {
 
 macro_rules! asm_binary_op {
     ($op:tt) => {
-        format!("pop rdi\n\
+        format!(
+            "pop rdi\n\
                  pop rax\n\
                  {} rax, rdi\n\
-                 push rax\n", stringify!($op))
+                 push rax\n",
+            stringify!($op)
+        )
     };
 }
 
@@ -62,7 +65,6 @@ impl SymbolTable {
     }
 }
 
-
 fn generate_assembly(ast: &ASTNode, sym_table: &mut SymbolTable) -> String {
     match ast {
         ASTNode::Program(statements) => {
@@ -71,11 +73,11 @@ fn generate_assembly(ast: &ASTNode, sym_table: &mut SymbolTable) -> String {
                 program_asm += &generate_assembly(stmt, sym_table);
             }
             program_asm
-        },
+        }
         ASTNode::Statement(inner) => generate_assembly(inner, sym_table),
         ASTNode::Number(val) => {
             asm_push!(val)
-        },
+        }
         ASTNode::BinaryOp { op, left, right } => {
             let left_asm = generate_assembly(left, sym_table);
             let right_asm = generate_assembly(right, sym_table);
@@ -84,22 +86,24 @@ fn generate_assembly(ast: &ASTNode, sym_table: &mut SymbolTable) -> String {
                 Operator::Minus => asm_binary_op!(sub),
                 Operator::Multiply => asm_binary_op!(imul),
                 Operator::Divide => {
-                    format!("pop rdi\n\
+                    format!(
+                        "pop rdi\n\
                              pop rax\n\
                              cqo\n\
                              idiv rdi\n\
-                             push rax\n")
+                             push rax\n"
+                    )
                 }
             };
             format!("{}{}{}", left_asm, right_asm, op_asm)
-        },
+        }
         ASTNode::Variable(name) => {
             if let Some(offset) = sym_table.get_offset(name) {
                 format!("mov rax, [rsp{}]\npush rax\n", offset)
             } else {
                 format!("; Variable {} not found\n", name)
             }
-        },
+        }
 
         ASTNode::Assign { name, value } => {
             let val_asm = generate_assembly(value, sym_table);
@@ -109,7 +113,7 @@ fn generate_assembly(ast: &ASTNode, sym_table: &mut SymbolTable) -> String {
                 sym_table.store_variable(name.clone())
             };
             format!("{}pop rax\nmov [rsp{}], rax\n", val_asm, offset)
-        },
+        }
     }
 }
 
@@ -118,21 +122,21 @@ fn wrap_as_program(assembly: &str, sym_table: &mut SymbolTable) -> String {
     program += "section .text\n";
     program += "\tglobal _start\n\n";
     program += "_start:\n";
-    program += "push rbp\n";  // Save the current base pointer
-    program += "mov rbp, rsp\n";  // Set the new base pointer
-    program += "sub rsp, ";  // Reserve space for 4 local variables (assuming a maximum for this example)
+    program += "push rbp\n"; // Save the current base pointer
+    program += "mov rbp, rsp\n"; // Set the new base pointer
+    program += "sub rsp, "; // Reserve space for 4 local variables (assuming a maximum for this example)
     program += &(sym_table.variables.len() * 8).to_string();
     program += "\n\n";
     program += "; user code\n";
     program += assembly;
     program += "\n";
-    program += "mov rsp, rbp\n";  // Restore the stack pointer
-    program += "pop rbp\n";  // Restore the base pointer
+    program += "mov rsp, rbp\n"; // Restore the stack pointer
+    program += "pop rbp\n"; // Restore the base pointer
     program += "; exit program\n";
-    program += "mov rdi, rax\n";  // Set the exit status to the value in rax
+    program += "mov rdi, rax\n"; // Set the exit status to the value in rax
 
-    program += "mov rax, 60\n";  // Syscall: exit
-    program += "syscall\n";  // invoke syscall
+    program += "mov rax, 60\n"; // Syscall: exit
+    program += "syscall\n"; // invoke syscall
     program
 }
 

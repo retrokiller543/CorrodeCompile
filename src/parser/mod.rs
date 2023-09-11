@@ -2,7 +2,7 @@
 // Purpose: parsing the input
 // Path: src/parser/mod.rs
 
-use crate::lexer::{Token, Operator};
+use crate::lexer::{Operator, Token};
 
 #[derive(Debug, Clone)]
 pub struct Parser {
@@ -27,7 +27,6 @@ pub enum ASTNode {
     Number(i32),
 }
 
-
 macro_rules! expect_token {
     ($self:ident, $token_variant:ident($val:ident) => $ast_node_variant:ident) => {
         match &$self.tokens[$self.position] { // Add reference here
@@ -51,24 +50,27 @@ macro_rules! expect_token {
 
 impl Parser {
     pub fn new(tokens: Vec<Token>) -> Self {
-        Parser { tokens, position: 0 }
+        Parser {
+            tokens,
+            position: 0,
+        }
     }
 
     pub fn parse(&mut self) -> Result<ASTNode, String> {
         let mut statements = Vec::new();
-    
+
         while self.position < self.tokens.len() {
             let stmt = self.statement()?;
             statements.push(stmt);
-    
+
             // Here, simply consume the EOL token and move to the next statement
             if let Some(Token::EOL) = self.peek_next_token() {
-                self.position += 1;  // Consume EOL
+                self.position += 1; // Consume EOL
             } else {
                 return Err("Expected end of line".to_string());
             }
         }
-    
+
         Ok(ASTNode::Program(statements))
     }
 
@@ -84,7 +86,7 @@ impl Parser {
             }
             _ => Err("Expected a statement".to_string()),
         }?;
-    
+
         Ok(ASTNode::Statement(Box::new(stmt)))
     }
 
@@ -92,7 +94,7 @@ impl Parser {
         let mut left = self.term()?;
 
         while let Some(op) = self.peek_next_operator(&[Operator::Plus, Operator::Minus]) {
-            self.position += 1;  // Consume Operator
+            self.position += 1; // Consume Operator
             let right = self.term()?;
             left = ASTNode::BinaryOp {
                 op,
@@ -108,7 +110,7 @@ impl Parser {
         let mut left = self.factor()?;
 
         while let Some(op) = self.peek_next_operator(&[Operator::Multiply, Operator::Divide]) {
-            self.position += 1;  // Consume Operator
+            self.position += 1; // Consume Operator
             let right = self.factor()?;
             left = ASTNode::BinaryOp {
                 op,
@@ -143,7 +145,7 @@ impl Parser {
         // First, handle expressions enclosed in parentheses
         if let Some(Token::OpenParen) = self.peek_next_token() {
             self.position += 1; // Consume '('
-            let expr = self.expression()?;  // Evaluate the enclosed expression
+            let expr = self.expression()?; // Evaluate the enclosed expression
             if let Some(Token::CloseParen) = self.peek_next_token() {
                 self.position += 1; // Consume ')'
                 return Ok(expr);
@@ -151,7 +153,7 @@ impl Parser {
                 return Err("Expected closing parenthesis".to_string());
             }
         }
-    
+
         // Next, handle numbers and variables
         match self.peek_next_token() {
             Some(Token::Number(_)) => self.expect_number(),
@@ -161,7 +163,7 @@ impl Parser {
                 } else {
                     self.expect_variable()
                 }
-            },
+            }
             // Here you can extend to handle other primary expressions
             _ => Err("Expected a number, variable, or primary expression".to_string()),
         }
@@ -206,13 +208,16 @@ impl Parser {
             value: Box::new(value),
         })
     }
-    
+
     fn expect_variable(&mut self) -> Result<ASTNode, String> {
         expect_token!(self, Identifier(name) => Variable)
     }
-    
 
     fn expect_number(&mut self) -> Result<ASTNode, String> {
         expect_token!(self, Number(val) => Number)
     }
 }
+
+// get the tests from the tests module
+#[cfg(test)]
+mod tests;
