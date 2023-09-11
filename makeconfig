@@ -1,0 +1,5 @@
+BINARY_PATH=./target/release/ferric_compiler
+PACKAGE_NAME=ferric-compiler
+PACKAGE_VERSION=0.0.0
+PACKAGE_MAINTAINER=Emil Schütt emil.schutt@gmail.com
+PACKAGE_DESCRIPTION=Project for learning how compilers work
