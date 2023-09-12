@@ -1,1 +1,6 @@
 /target
+dev*
+example
+example*
+test.o
+test

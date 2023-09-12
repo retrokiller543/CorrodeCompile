@@ -132,6 +132,11 @@ version:
 
 # Git helpers
 
+.PHONY: init-hooks
+init-hooks:
+	@python3 pre-commit-3.4.0.pyz install
+	@python3 pre-commit-3.4.0.pyz run --all-files
+
 .PHONY: commit
 commit:
 	@git add -A

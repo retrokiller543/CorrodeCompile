@@ -8,6 +8,7 @@ macro_rules! get_parser {
     }};
 }
 
+#[allow(unused_macros)]
 macro_rules! assert_number {
     ($ast:expr, $expected_val:expr) => {
         match $ast {
@@ -23,6 +24,7 @@ macro_rules! assert_number {
     };
 }
 
+#[allow(unused_macros)]
 macro_rules! assert_binary_op {
     ($ast:expr, $expected_op:expr, $expected_left:expr, $expected_right:expr) => {
         match $ast {

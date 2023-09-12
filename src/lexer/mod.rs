@@ -165,4 +165,36 @@ mod tests {
             Token::Number(123)
         ]
     );
+
+    test_lexer!(
+        complex_expr_with_paren,
+        "variable_name = (123 + 456) * 789",
+        vec![
+            Token::Identifier("variable_name".to_string()),
+            Token::Assign,
+            Token::OpenParen,
+            Token::Number(123),
+            Token::Operator(Operator::Plus),
+            Token::Number(456),
+            Token::CloseParen,
+            Token::Operator(Operator::Multiply),
+            Token::Number(789)
+        ]
+    );
+
+    test_lexer!(
+        complex_expr_with_paren_and_identifier,
+        "variable_name = (123 + variable_name) * 789",
+        vec![
+            Token::Identifier("variable_name".to_string()),
+            Token::Assign,
+            Token::OpenParen,
+            Token::Number(123),
+            Token::Operator(Operator::Plus),
+            Token::Identifier("variable_name".to_string()),
+            Token::CloseParen,
+            Token::Operator(Operator::Multiply),
+            Token::Number(789)
+        ]
+    );
 }

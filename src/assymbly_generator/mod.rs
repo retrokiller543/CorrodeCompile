@@ -12,12 +12,14 @@ macro_rules! asm_push {
     };
 }
 
+#[allow(unused_macros)]
 macro_rules! asm_pop {
     ($register:expr) => {
         format!("pop {}\n", $register)
     };
 }
 
+#[allow(unused_macros)]
 macro_rules! asm_mov {
     ($dst:expr, $src:expr) => {
         format!("mov [rsp{}], {}\n", $dst, $src)
